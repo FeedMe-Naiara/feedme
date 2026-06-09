@@ -59,10 +59,13 @@ headers: {
     body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 1200, messages: [{ role: "user", content: prompt }] }),
   });
   const d = await res.json();
-  const t = (d.content || []).map(function(i) { return i.text || ""; }).join("");
-  return JSON.parse(t.replace(/```json|```/g, "").trim());
-}
-
+const t = (d.content || []).map(function(i) { return i.text || ""; }).join("");
+const parsed = JSON.parse(t.replace(/```json|```/g, "").trim());
+return parsed.map(function(card) {
+  if (typeof card.hashtags === "string") card.hashtags = card.hashtags.split(",").map(function(h) { return h.trim(); });
+  if (!Array.isArray(card.hashtags)) card.hashtags = [];
+  return card;
+  });
 function fetchCards(topic, count) {
   count = count || 5;
   return callClaude("TikTok curator. Generate " + count + " video recommendations specifically about \"" + topic + "\". Return ONLY a JSON array. Each item: title (max 8 words), handle (real TikTok creator no @), duration (e.g. \"1:24\"), emoji, hashtags (2 real no #).");
